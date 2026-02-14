@@ -1012,6 +1012,615 @@ footer {
   z-index: 0;
 }
 
+/* ========== FLOW SIMULATION ========== */
+.flow-controls {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 32px;
+  justify-content: center;
+}
+
+.flow-control-btn {
+  font-family: var(--mono);
+  font-size: 13px;
+  padding: 10px 24px;
+  border: 1px solid var(--border-light);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.3s;
+  letter-spacing: 0.5px;
+}
+
+.flow-control-btn:hover {
+  border-color: var(--teal-dim);
+  color: var(--teal);
+  background: var(--teal-glow);
+}
+
+.flow-control-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.flow-control-btn.primary {
+  border-color: var(--teal-dim);
+  color: var(--teal);
+  background: var(--teal-glow);
+}
+
+.flow-control-btn.primary:hover {
+  background: var(--teal-glow-strong);
+}
+
+.stage-active {
+  border-color: var(--teal) !important;
+  box-shadow: 0 0 40px var(--teal-glow-strong), 0 0 80px var(--teal-glow) !important;
+  transform: scale(1.04);
+}
+
+.stage-complete {
+  border-color: var(--teal-dim) !important;
+  background: linear-gradient(135deg, var(--bg-card), rgba(0,229,199,0.05)) !important;
+}
+
+.stage-complete .flow-node-title { color: var(--teal-dim); }
+
+.stage-metadata {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--teal);
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  line-height: 1.6;
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: opacity 0.4s, max-height 0.4s;
+}
+
+.stage-active .stage-metadata,
+.stage-complete .stage-metadata {
+  opacity: 1;
+  max-height: 120px;
+}
+
+.simulation-log-panel {
+  max-width: 1200px;
+  margin: 32px auto 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  max-height: 240px;
+  overflow-y: auto;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.simulation-log-panel::-webkit-scrollbar { width: 6px; }
+.simulation-log-panel::-webkit-scrollbar-track { background: var(--bg-card); }
+.simulation-log-panel::-webkit-scrollbar-thumb { background: var(--border-light); }
+
+.log-panel-header {
+  position: sticky;
+  top: 0;
+  padding: 10px 16px;
+  background: var(--bg-raised);
+  border-bottom: 1px solid var(--border);
+  color: var(--text-dim);
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  z-index: 2;
+}
+
+.log-entry {
+  padding: 6px 16px;
+  border-bottom: 1px solid rgba(26,36,53,0.5);
+  color: var(--text-secondary);
+  display: flex;
+  gap: 12px;
+  animation: logSlideIn 0.3s ease-out;
+}
+
+@keyframes logSlideIn {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.log-entry .log-time { color: var(--text-dim); flex-shrink: 0; }
+.log-entry .log-stage { color: var(--teal); flex-shrink: 0; min-width: 80px; }
+.log-entry .log-msg { color: var(--text-secondary); }
+
+/* ========== PACKET SIMULATOR ========== */
+.simulator-section {
+  background: var(--bg-deep);
+}
+
+.frame-type-selector {
+  display: flex;
+  gap: 0;
+  margin-bottom: 40px;
+  max-width: 1200px;
+  border: 1px solid var(--border);
+}
+
+.frame-type-btn {
+  font-family: var(--mono);
+  font-size: 13px;
+  padding: 12px 24px;
+  background: var(--bg-card);
+  border: none;
+  border-right: 1px solid var(--border);
+  color: var(--text-secondary);
+  cursor: pointer;
+  flex: 1;
+  transition: all 0.3s;
+  letter-spacing: 0.5px;
+}
+
+.frame-type-btn:last-child { border-right: none; }
+
+.frame-type-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-card-hover);
+}
+
+.frame-type-btn.active {
+  color: var(--teal);
+  background: var(--teal-glow);
+  box-shadow: inset 0 -2px 0 var(--teal);
+}
+
+.simulator-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  max-width: 1200px;
+}
+
+.byte-grid-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  padding: 24px;
+}
+
+.byte-grid-panel h4 {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-dim);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.byte-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.byte-block {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.byte-block:hover {
+  transform: scale(1.1);
+  z-index: 2;
+}
+
+.byte-block.selected {
+  transform: scale(1.12);
+  z-index: 3;
+  box-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
+
+.byte-block.mhdr { background: rgba(245,166,35,0.2); color: var(--amber); border-color: var(--amber-dim); }
+.byte-block.mhdr.selected { box-shadow: 0 0 20px var(--amber-glow); }
+.byte-block.devaddr { background: rgba(0,229,199,0.12); color: var(--teal); border-color: var(--teal-dim); }
+.byte-block.devaddr.selected { box-shadow: 0 0 20px var(--teal-glow); }
+.byte-block.fctrl { background: rgba(232,98,44,0.15); color: var(--rust-orange); border-color: var(--rust-orange); }
+.byte-block.fctrl.selected { box-shadow: 0 0 20px rgba(232,98,44,0.3); }
+.byte-block.fcnt { background: rgba(80,140,255,0.12); color: #509cff; border-color: #3a7bdf; }
+.byte-block.fcnt.selected { box-shadow: 0 0 20px rgba(80,140,255,0.3); }
+.byte-block.fport { background: rgba(180,100,255,0.12); color: #b464ff; border-color: #9645e0; }
+.byte-block.fport.selected { box-shadow: 0 0 20px rgba(180,100,255,0.3); }
+.byte-block.payload { background: rgba(0,200,120,0.1); color: #00c878; border-color: #00a060; }
+.byte-block.payload.selected { box-shadow: 0 0 20px rgba(0,200,120,0.3); }
+.byte-block.mic { background: rgba(255,60,60,0.12); color: #ff5050; border-color: #cc3333; }
+.byte-block.mic.selected { box-shadow: 0 0 20px rgba(255,60,60,0.3); }
+.byte-block.joineui { background: rgba(0,229,199,0.12); color: var(--teal); border-color: var(--teal-dim); }
+.byte-block.joineui.selected { box-shadow: 0 0 20px var(--teal-glow); }
+.byte-block.deveui { background: rgba(80,140,255,0.12); color: #509cff; border-color: #3a7bdf; }
+.byte-block.deveui.selected { box-shadow: 0 0 20px rgba(80,140,255,0.3); }
+.byte-block.devnonce { background: rgba(180,100,255,0.12); color: #b464ff; border-color: #9645e0; }
+.byte-block.devnonce.selected { box-shadow: 0 0 20px rgba(180,100,255,0.3); }
+.byte-block.joinnonce { background: rgba(0,200,120,0.1); color: #00c878; border-color: #00a060; }
+.byte-block.joinnonce.selected { box-shadow: 0 0 20px rgba(0,200,120,0.3); }
+.byte-block.homenetid { background: rgba(232,98,44,0.15); color: var(--rust-orange); border-color: var(--rust-orange); }
+.byte-block.homenetid.selected { box-shadow: 0 0 20px rgba(232,98,44,0.3); }
+.byte-block.dlsettings { background: rgba(180,100,255,0.12); color: #b464ff; border-color: #9645e0; }
+.byte-block.dlsettings.selected { box-shadow: 0 0 20px rgba(180,100,255,0.3); }
+.byte-block.rxdelay { background: rgba(80,140,255,0.12); color: #509cff; border-color: #3a7bdf; }
+.byte-block.rxdelay.selected { box-shadow: 0 0 20px rgba(80,140,255,0.3); }
+
+.byte-block-label {
+  position: absolute;
+  bottom: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 8px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.bit-breakdown-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  padding: 24px;
+}
+
+.bit-breakdown-panel h4 {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-dim);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.bit-breakdown-empty {
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 13px;
+  padding: 40px 0;
+  text-align: center;
+}
+
+.bit-field {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  margin-bottom: 6px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  font-family: var(--mono);
+  font-size: 13px;
+}
+
+.bit-field-name { color: var(--text-primary); }
+.bit-field-bits { color: var(--teal-dim); font-size: 11px; }
+.bit-field-value { color: var(--amber); }
+.bit-field-desc {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 4px;
+  padding: 0 14px 8px;
+  line-height: 1.5;
+}
+
+.raw-hex-output {
+  max-width: 1200px;
+  margin-top: 24px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.raw-hex-output .hex-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.raw-hex-output .hex-value {
+  font-family: var(--mono);
+  font-size: 14px;
+  color: var(--teal);
+  word-break: break-all;
+  flex: 1;
+}
+
+.raw-hex-output .copy-btn {
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 6px 16px;
+  border: 1px solid var(--border-light);
+  background: var(--bg-raised);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.3s;
+  flex-shrink: 0;
+}
+
+.raw-hex-output .copy-btn:hover {
+  border-color: var(--teal-dim);
+  color: var(--teal);
+}
+
+.packet-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  max-width: 1200px;
+  margin-top: 20px;
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.legend-swatch {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-dim);
+}
+
+.legend-swatch .swatch {
+  width: 14px;
+  height: 14px;
+  border: 1px solid;
+}
+
+.swatch.mhdr { background: rgba(245,166,35,0.2); border-color: var(--amber-dim); }
+.swatch.devaddr { background: rgba(0,229,199,0.12); border-color: var(--teal-dim); }
+.swatch.fctrl { background: rgba(232,98,44,0.15); border-color: var(--rust-orange); }
+.swatch.fcnt { background: rgba(80,140,255,0.12); border-color: #3a7bdf; }
+.swatch.fport { background: rgba(180,100,255,0.12); border-color: #9645e0; }
+.swatch.payload { background: rgba(0,200,120,0.1); border-color: #00a060; }
+.swatch.mic { background: rgba(255,60,60,0.12); border-color: #cc3333; }
+
+/* ========== CONFIG BUILDER ========== */
+.config-section {
+  background: var(--bg-primary);
+}
+
+.config-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  max-width: 1200px;
+}
+
+.config-form-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.config-section-block {
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+}
+
+.config-section-header {
+  font-family: var(--mono);
+  font-size: 14px;
+  padding: 14px 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--text-primary);
+  transition: background 0.3s;
+  user-select: none;
+}
+
+.config-section-header:hover { background: var(--bg-card-hover); }
+
+.config-section-header .toggle-icon {
+  color: var(--text-dim);
+  font-size: 12px;
+  transition: transform 0.3s;
+}
+
+.config-section-header .toggle-icon.open { transform: rotate(180deg); }
+
+.config-section-body {
+  padding: 0 20px;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease, padding 0.4s ease;
+}
+
+.config-section-body.open {
+  padding: 16px 20px;
+  max-height: 800px;
+}
+
+.form-group {
+  margin-bottom: 14px;
+}
+
+.form-group label {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-dim);
+  letter-spacing: 0.5px;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.form-input {
+  font-family: var(--mono);
+  font-size: 13px;
+  padding: 8px 12px;
+  width: 100%;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.form-input:focus { border-color: var(--teal-dim); }
+
+.radio-group {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.radio-group label {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.radio-group input[type="radio"] {
+  accent-color: var(--teal);
+}
+
+.checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+}
+
+.checkbox-grid label {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.checkbox-grid input[type="checkbox"] {
+  accent-color: var(--teal);
+}
+
+.conditional-field {
+  display: none;
+}
+
+.conditional-field.visible {
+  display: block;
+}
+
+.integration-config {
+  display: none;
+  margin-top: 10px;
+  padding: 12px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+}
+
+.integration-config.visible { display: block; }
+
+.integration-config .form-group:last-child { margin-bottom: 0; }
+
+.config-preview-panel {
+  position: sticky;
+  top: 80px;
+  max-height: calc(100vh - 120px);
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+}
+
+.config-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.config-preview-header span {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.config-preview-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.config-preview-actions button {
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 5px 14px;
+  border: 1px solid var(--border-light);
+  background: var(--bg-raised);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.config-preview-actions button:hover {
+  border-color: var(--teal-dim);
+  color: var(--teal);
+}
+
+.toml-preview {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.7;
+  white-space: pre;
+  color: var(--text-primary);
+}
+
+.toml-preview::-webkit-scrollbar { width: 6px; }
+.toml-preview::-webkit-scrollbar-track { background: var(--bg-card); }
+.toml-preview::-webkit-scrollbar-thumb { background: var(--border-light); }
+
+.toml-section { color: var(--teal); }
+.toml-key { color: var(--text-primary); }
+.toml-string { color: var(--teal-dim); }
+.toml-number { color: var(--amber); }
+.toml-boolean { color: var(--rust-orange); }
+.toml-comment { color: var(--text-dim); font-style: italic; }
+
+.generate-btn {
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 5px 12px;
+  border: 1px solid var(--border-light);
+  background: var(--bg-raised);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-left: 8px;
+}
+
+.generate-btn:hover {
+  border-color: var(--teal-dim);
+  color: var(--teal);
+}
+
 /* ========== RESPONSIVE ========== */
 @media (max-width: 1024px) {
   .arch-grid { grid-template-columns: repeat(2, 1fr); }
@@ -1022,6 +1631,9 @@ footer {
   .component-header { position: static; }
   .flow-diagram { flex-direction: column; }
   .flow-arrow { transform: rotate(90deg); padding: 8px 0; }
+  .simulator-grid { grid-template-columns: 1fr; }
+  .config-container { grid-template-columns: 1fr; }
+  .config-preview-panel { position: static; max-height: 500px; }
 }
 
 @media (max-width: 768px) {
@@ -1038,6 +1650,12 @@ footer {
   .stats-bar { padding: 36px 24px; }
   .hero-signal-container { display: none; }
   .hero-scroll-hint { display: none; }
+  .byte-block { width: 36px; height: 36px; font-size: 11px; }
+  .flow-controls { flex-direction: column; align-items: center; }
+  .checkbox-grid { grid-template-columns: 1fr; }
+  .frame-type-selector { flex-direction: column; }
+  .frame-type-btn { border-right: none; border-bottom: 1px solid var(--border); }
+  .frame-type-btn:last-child { border-bottom: none; }
 }
 </style>
 </head>
@@ -1058,6 +1676,8 @@ footer {
     <li><a href="#integrations">Integrations</a></li>
     <li><a href="#scenarios">Scenarios</a></li>
     <li><a href="#deploy">Deploy</a></li>
+    <li><a href="#packet-simulator">Simulator</a></li>
+    <li><a href="#config-builder">Config</a></li>
   </ul>
 </nav>
 
@@ -1195,11 +1815,17 @@ footer {
     emerging as structured, decoded events delivered to your applications.
   </p>
 
+  <div class="flow-controls reveal reveal-delay-3">
+    <button class="flow-control-btn primary" id="btn-simulate" onclick="flowSimulator.start()">Simulate Uplink</button>
+    <button class="flow-control-btn" id="btn-reset" onclick="flowSimulator.reset()">Reset</button>
+  </div>
+
   <div class="flow-diagram reveal reveal-delay-3">
-    <div class="flow-node">
+    <div class="flow-node" data-stage="1" id="flow-stage-1">
       <div class="flow-node-label">Source</div>
       <div class="flow-node-title">IoT Sensors</div>
       <div class="flow-node-desc">LoRaWAN Class A/B/C<br>end-devices</div>
+      <div class="stage-metadata">SF7 BW125 868.1MHz<br>14 dBm TX Power<br>DevAddr: 01ABCDEF</div>
     </div>
 
     <div class="flow-arrow">
@@ -1209,10 +1835,11 @@ footer {
       </div>
     </div>
 
-    <div class="flow-node">
+    <div class="flow-node" data-stage="2" id="flow-stage-2">
       <div class="flow-node-label">Relay</div>
       <div class="flow-node-title">Gateways</div>
       <div class="flow-node-desc">Receive &amp; forward<br>raw LoRa frames</div>
+      <div class="stage-metadata">RSSI: -72 dBm<br>SNR: 8.5 dB<br>3 gateways received</div>
     </div>
 
     <div class="flow-arrow">
@@ -1222,10 +1849,11 @@ footer {
       </div>
     </div>
 
-    <div class="flow-node core">
+    <div class="flow-node core" data-stage="3" id="flow-stage-3">
       <div class="flow-node-label">Core Engine</div>
       <div class="flow-node-title">ChirpStack</div>
       <div class="flow-node-desc">Dedup, decrypt, MAC processing,<br>ADR, session management,<br>payload decoding</div>
+      <div class="stage-metadata" id="core-stage-meta">Dedup: 3 frames &rarr; 1<br>Best RSSI: GW-0a2b (-72dBm)</div>
     </div>
 
     <div class="flow-arrow">
@@ -1235,11 +1863,17 @@ footer {
       </div>
     </div>
 
-    <div class="flow-node">
+    <div class="flow-node" data-stage="6" id="flow-stage-6">
       <div class="flow-node-label">Destination</div>
       <div class="flow-node-title">Integrations</div>
       <div class="flow-node-desc">MQTT, Kafka, HTTP,<br>AWS, Azure, GCP&hellip;</div>
+      <div class="stage-metadata">MQTT: published to<br>application/1/device/01ab/event/up</div>
     </div>
+  </div>
+
+  <div class="simulation-log-panel reveal reveal-delay-4" id="flow-log-panel">
+    <div class="log-panel-header">Simulation Log</div>
+    <div id="flow-log-entries"></div>
   </div>
 </section>
 
@@ -1541,6 +2175,250 @@ footer {
   </div>
 </section>
 
+<div class="diagonal-divider"></div>
+
+<!-- ========== PACKET SIMULATOR ========== -->
+<section class="simulator-section" id="packet-simulator">
+  <div class="section-label reveal">// 08</div>
+  <h2 class="section-title reveal reveal-delay-1">LoRaWAN Packet Simulator</h2>
+  <p class="section-desc reveal reveal-delay-2">
+    Explore the byte-level structure of LoRaWAN frames. Select a frame type, click on
+    individual bytes to inspect their bit-level fields, and see how the PHYPayload is constructed.
+  </p>
+
+  <div class="frame-type-selector reveal reveal-delay-3" id="frame-type-selector">
+    <button class="frame-type-btn active" data-frame="data-uplink">Data Uplink</button>
+    <button class="frame-type-btn" data-frame="data-downlink">Data Downlink</button>
+    <button class="frame-type-btn" data-frame="join-request">Join Request</button>
+    <button class="frame-type-btn" data-frame="join-accept">Join Accept</button>
+  </div>
+
+  <div class="simulator-grid reveal reveal-delay-3">
+    <div class="byte-grid-panel">
+      <h4>Byte Grid</h4>
+      <div class="byte-grid" id="byte-grid"></div>
+    </div>
+    <div class="bit-breakdown-panel">
+      <h4>Bit Breakdown</h4>
+      <div id="bit-breakdown">
+        <div class="bit-breakdown-empty">Click a byte to inspect its fields</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="raw-hex-output reveal reveal-delay-4">
+    <span class="hex-label">PHYPayload</span>
+    <span class="hex-value" id="hex-output"></span>
+    <button class="copy-btn" onclick="packetSimulator.copyHex()">Copy</button>
+  </div>
+
+  <div class="packet-legend reveal reveal-delay-4" id="packet-legend"></div>
+</section>
+
+<div class="diagonal-divider-reverse"></div>
+
+<!-- ========== CONFIG BUILDER ========== -->
+<section class="config-section" id="config-builder">
+  <div class="section-label reveal">// 09</div>
+  <h2 class="section-title reveal reveal-delay-1">Configuration Builder</h2>
+  <p class="section-desc reveal reveal-delay-2">
+    Interactively build a ChirpStack configuration file. Adjust settings in the form
+    and watch the TOML preview update in real time. Copy or download when ready.
+  </p>
+
+  <div class="config-container reveal reveal-delay-3">
+    <div class="config-form-panel" id="config-form">
+
+      <!-- Database -->
+      <div class="config-section-block">
+        <div class="config-section-header" onclick="configBuilder.toggleSection(this)">
+          Database
+          <span class="toggle-icon">&#9660;</span>
+        </div>
+        <div class="config-section-body">
+          <div class="radio-group">
+            <label><input type="radio" name="db_type" value="postgresql" checked onchange="configBuilder.update()"> PostgreSQL</label>
+            <label><input type="radio" name="db_type" value="sqlite" onchange="configBuilder.update()"> SQLite</label>
+          </div>
+          <div class="conditional-field visible" id="pg-fields">
+            <div class="form-group">
+              <label>DSN</label>
+              <input class="form-input" id="pg-dsn" value="postgres://chirpstack:chirpstack@localhost/chirpstack?sslmode=disable" oninput="configBuilder.update()">
+            </div>
+            <div class="form-group">
+              <label>Max Open Connections</label>
+              <input class="form-input" id="pg-max-conn" type="number" value="10" oninput="configBuilder.update()">
+            </div>
+          </div>
+          <div class="conditional-field" id="sqlite-fields">
+            <div class="form-group">
+              <label>Path</label>
+              <input class="form-input" id="sqlite-path" value="/etc/chirpstack/chirpstack.db" oninput="configBuilder.update()">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Redis -->
+      <div class="config-section-block">
+        <div class="config-section-header" onclick="configBuilder.toggleSection(this)">
+          Redis
+          <span class="toggle-icon">&#9660;</span>
+        </div>
+        <div class="config-section-body">
+          <div class="form-group">
+            <label>Servers</label>
+            <input class="form-input" id="redis-servers" value="redis://127.0.0.1/" oninput="configBuilder.update()">
+          </div>
+          <div class="form-group">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+              <input type="checkbox" id="redis-cluster" onchange="configBuilder.update()" style="accent-color:var(--teal)">
+              Cluster Mode
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Network -->
+      <div class="config-section-block">
+        <div class="config-section-header" onclick="configBuilder.toggleSection(this)">
+          Network
+          <span class="toggle-icon">&#9660;</span>
+        </div>
+        <div class="config-section-body">
+          <div class="form-group">
+            <label>Net ID (hex)</label>
+            <input class="form-input" id="net-id" value="000000" maxlength="6" oninput="configBuilder.update()">
+          </div>
+          <div class="form-group">
+            <label>Enabled Regions</label>
+            <div class="checkbox-grid" id="region-checkboxes">
+              <label><input type="checkbox" checked value="eu868" onchange="configBuilder.update()"> EU868</label>
+              <label><input type="checkbox" value="us915_0" onchange="configBuilder.update()"> US915</label>
+              <label><input type="checkbox" value="as923" onchange="configBuilder.update()"> AS923</label>
+              <label><input type="checkbox" value="as923_2" onchange="configBuilder.update()"> AS923-2</label>
+              <label><input type="checkbox" value="as923_3" onchange="configBuilder.update()"> AS923-3</label>
+              <label><input type="checkbox" value="as923_4" onchange="configBuilder.update()"> AS923-4</label>
+              <label><input type="checkbox" value="au915_0" onchange="configBuilder.update()"> AU915</label>
+              <label><input type="checkbox" value="cn470_0" onchange="configBuilder.update()"> CN470</label>
+              <label><input type="checkbox" value="cn779" onchange="configBuilder.update()"> CN779</label>
+              <label><input type="checkbox" value="eu433" onchange="configBuilder.update()"> EU433</label>
+              <label><input type="checkbox" value="in865" onchange="configBuilder.update()"> IN865</label>
+              <label><input type="checkbox" value="ism2400" onchange="configBuilder.update()"> ISM2400</label>
+              <label><input type="checkbox" value="kr920" onchange="configBuilder.update()"> KR920</label>
+              <label><input type="checkbox" value="ru864" onchange="configBuilder.update()"> RU864</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- API -->
+      <div class="config-section-block">
+        <div class="config-section-header" onclick="configBuilder.toggleSection(this)">
+          API
+          <span class="toggle-icon">&#9660;</span>
+        </div>
+        <div class="config-section-body">
+          <div class="form-group">
+            <label>Bind Address</label>
+            <input class="form-input" id="api-bind" value="0.0.0.0:8080" oninput="configBuilder.update()">
+          </div>
+          <div class="form-group">
+            <label>Secret (JWT signing)
+              <button class="generate-btn" type="button" onclick="configBuilder.generateSecret()">Generate Random</button>
+            </label>
+            <input class="form-input" id="api-secret" value="" placeholder="Click Generate Random" oninput="configBuilder.update()">
+          </div>
+        </div>
+      </div>
+
+      <!-- Integrations -->
+      <div class="config-section-block">
+        <div class="config-section-header" onclick="configBuilder.toggleSection(this)">
+          Integrations
+          <span class="toggle-icon">&#9660;</span>
+        </div>
+        <div class="config-section-body">
+          <div class="form-group">
+            <label>Enabled Integrations</label>
+            <div class="checkbox-grid">
+              <label><input type="checkbox" checked value="mqtt" class="integration-toggle" onchange="configBuilder.toggleIntegration('mqtt', this.checked)"> MQTT</label>
+              <label><input type="checkbox" value="postgresql" class="integration-toggle" onchange="configBuilder.toggleIntegration('postgresql', this.checked)"> PostgreSQL</label>
+              <label><input type="checkbox" value="amqp" class="integration-toggle" onchange="configBuilder.toggleIntegration('amqp', this.checked)"> AMQP</label>
+              <label><input type="checkbox" value="kafka" class="integration-toggle" onchange="configBuilder.toggleIntegration('kafka', this.checked)"> Kafka</label>
+            </div>
+          </div>
+          <div class="integration-config visible" id="int-mqtt">
+            <div class="form-group">
+              <label>MQTT Server</label>
+              <input class="form-input" value="tcp://127.0.0.1:1883" oninput="configBuilder.update()" data-int="mqtt-server">
+            </div>
+            <div class="form-group">
+              <label>Username</label>
+              <input class="form-input" value="" placeholder="(optional)" oninput="configBuilder.update()" data-int="mqtt-username">
+            </div>
+            <div class="form-group">
+              <label>Password</label>
+              <input class="form-input" type="password" value="" placeholder="(optional)" oninput="configBuilder.update()" data-int="mqtt-password">
+            </div>
+          </div>
+          <div class="integration-config" id="int-postgresql">
+            <div class="form-group">
+              <label>PostgreSQL DSN</label>
+              <input class="form-input" value="postgres://chirpstack_integration:chirpstack@localhost/chirpstack_integration?sslmode=disable" oninput="configBuilder.update()" data-int="pg-int-dsn">
+            </div>
+          </div>
+          <div class="integration-config" id="int-amqp">
+            <div class="form-group">
+              <label>AMQP URL</label>
+              <input class="form-input" value="amqp://guest:guest@localhost:5672" oninput="configBuilder.update()" data-int="amqp-url">
+            </div>
+          </div>
+          <div class="integration-config" id="int-kafka">
+            <div class="form-group">
+              <label>Kafka Brokers</label>
+              <input class="form-input" value="localhost:9092" oninput="configBuilder.update()" data-int="kafka-brokers">
+            </div>
+            <div class="form-group">
+              <label>Topic</label>
+              <input class="form-input" value="chirpstack" oninput="configBuilder.update()" data-int="kafka-topic">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Authentication -->
+      <div class="config-section-block">
+        <div class="config-section-header" onclick="configBuilder.toggleSection(this)">
+          Authentication
+          <span class="toggle-icon">&#9660;</span>
+        </div>
+        <div class="config-section-body">
+          <div class="radio-group" style="flex-direction:column;gap:8px">
+            <label><input type="radio" name="auth_type" value="internal" checked onchange="configBuilder.update()"> Internal (built-in)</label>
+            <label><input type="radio" name="auth_type" value="openid_connect" onchange="configBuilder.update()"> OpenID Connect</label>
+            <label><input type="radio" name="auth_type" value="oauth2" onchange="configBuilder.update()"> OAuth2</label>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="config-preview-panel">
+      <div class="config-preview-header">
+        <span>chirpstack.toml</span>
+        <div class="config-preview-actions">
+          <button onclick="configBuilder.copyTOML()">Copy</button>
+          <button onclick="configBuilder.downloadTOML()">Download</button>
+        </div>
+      </div>
+      <div class="toml-preview" id="toml-preview"></div>
+    </div>
+  </div>
+</section>
+
+<div class="diagonal-divider"></div>
+
 <!-- ========== FOOTER ========== -->
 <footer>
   <div class="footer-left">
@@ -1628,6 +2506,507 @@ window.addEventListener('scroll', () => {
   }
   lastScroll = scrollY;
 }, { passive: true });
+
+// ========== FLOW SIMULATOR ==========
+const flowSimulator = {
+  running: false,
+  stages: [
+    { nodeId: 'flow-stage-1', label: 'Sensor TX', msg: 'Sensor transmits uplink frame: SF7 BW125 at 868.1MHz, 14dBm TX power, DevAddr 01ABCDEF', meta: null },
+    { nodeId: 'flow-stage-2', label: 'Gateway RX', msg: 'Gateway receives frame: RSSI -72dBm, SNR 8.5dB. 3 gateways reported reception.', meta: null },
+    { nodeId: 'flow-stage-3', label: 'Dedup', msg: 'Deduplication: 3 copies merged. Best RSSI from GW-0a2b (-72dBm) selected as primary.', meta: 'Dedup: 3 frames &rarr; 1<br>Best RSSI: GW-0a2b (-72dBm)' },
+    { nodeId: 'flow-stage-3', label: 'Decrypt', msg: 'MIC validated (correct). FRMPayload decrypted with AppSKey. Payload: 0x48656C6C6F ("Hello").', meta: 'MIC: valid &check;<br>Payload: 48656C6C6F ("Hello")' },
+    { nodeId: 'flow-stage-3', label: 'MAC Proc', msg: 'ADR engine: current DR0, optimal DR3. Scheduling LinkADRReq in next downlink. Battery: 78%.', meta: 'ADR: DR0 &rarr; DR3 adjustment<br>LinkADRReq scheduled' },
+    { nodeId: 'flow-stage-6', label: 'Dispatch', msg: 'Event published to MQTT topic application/1/device/01abcdef/event/up. HTTP webhook queued.', meta: null }
+  ],
+
+  addLog(stage, msg) {
+    const container = document.getElementById('flow-log-entries');
+    const now = new Date();
+    const ts = [now.getHours(), now.getMinutes(), now.getSeconds()]
+      .map(n => String(n).padStart(2, '0')).join(':') + '.' +
+      String(now.getMilliseconds()).padStart(3, '0');
+    const entry = document.createElement('div');
+    entry.className = 'log-entry';
+    entry.innerHTML = '<span class="log-time">' + ts + '</span><span class="log-stage">[' + stage + ']</span><span class="log-msg">' + msg + '</span>';
+    container.appendChild(entry);
+    // Cap at 50
+    while (container.children.length > 50) container.removeChild(container.firstChild);
+    const panel = document.getElementById('flow-log-panel');
+    panel.scrollTop = panel.scrollHeight;
+  },
+
+  sleep(ms) { return new Promise(r => setTimeout(r, ms)); },
+
+  async start() {
+    if (this.running) return;
+    this.running = true;
+    document.getElementById('btn-simulate').disabled = true;
+    this.addLog('SIM', 'Simulation started');
+
+    const metaEl = document.getElementById('core-stage-meta');
+
+    for (const stage of this.stages) {
+      const el = document.getElementById(stage.nodeId);
+      if (el) {
+        el.classList.remove('stage-complete');
+        el.classList.add('stage-active');
+      }
+      if (stage.meta && metaEl) {
+        metaEl.innerHTML = stage.meta;
+      }
+      this.addLog(stage.label, stage.msg);
+      await this.sleep(800);
+      // Only mark complete if next stage uses a different node
+      const idx = this.stages.indexOf(stage);
+      const nextStage = this.stages[idx + 1];
+      if (!nextStage || nextStage.nodeId !== stage.nodeId) {
+        if (el) {
+          el.classList.remove('stage-active');
+          el.classList.add('stage-complete');
+        }
+      }
+    }
+
+    this.addLog('SIM', 'Simulation complete. All 6 stages processed successfully.');
+    this.running = false;
+    document.getElementById('btn-simulate').disabled = false;
+  },
+
+  reset() {
+    this.running = false;
+    document.getElementById('btn-simulate').disabled = false;
+    ['flow-stage-1', 'flow-stage-2', 'flow-stage-3', 'flow-stage-6'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('stage-active', 'stage-complete');
+    });
+    const metaEl = document.getElementById('core-stage-meta');
+    if (metaEl) metaEl.innerHTML = 'Dedup: 3 frames &rarr; 1<br>Best RSSI: GW-0a2b (-72dBm)';
+    document.getElementById('flow-log-entries').innerHTML = '';
+    this.addLog('SIM', 'Simulation reset.');
+  }
+};
+
+// ========== PACKET SIMULATOR ==========
+const packetSimulator = {
+  frameType: 'data-uplink',
+  selectedByteIndex: -1,
+
+  frames: {
+    'data-uplink': {
+      label: 'Unconfirmed Data Up',
+      bytes: [0x40, 0xEF, 0xCD, 0xAB, 0x01, 0x00, 0x01, 0x00, 0x01, 0x48, 0x65, 0x6C, 0x6C, 0x6F, 0xAA, 0xBB, 0xCC, 0xDD],
+      fields: [
+        { name: 'MHDR', cls: 'mhdr', start: 0, len: 1 },
+        { name: 'DevAddr', cls: 'devaddr', start: 1, len: 4 },
+        { name: 'FCtrl', cls: 'fctrl', start: 5, len: 1 },
+        { name: 'FCnt', cls: 'fcnt', start: 6, len: 2 },
+        { name: 'FPort', cls: 'fport', start: 8, len: 1 },
+        { name: 'FRMPayload', cls: 'payload', start: 9, len: 5 },
+        { name: 'MIC', cls: 'mic', start: 14, len: 4 }
+      ],
+      legend: [
+        { cls: 'mhdr', label: 'MHDR' }, { cls: 'devaddr', label: 'DevAddr' },
+        { cls: 'fctrl', label: 'FCtrl' }, { cls: 'fcnt', label: 'FCnt' },
+        { cls: 'fport', label: 'FPort' }, { cls: 'payload', label: 'FRMPayload' },
+        { cls: 'mic', label: 'MIC' }
+      ]
+    },
+    'data-downlink': {
+      label: 'Unconfirmed Data Down',
+      bytes: [0x60, 0xEF, 0xCD, 0xAB, 0x01, 0x20, 0x01, 0x00, 0x01, 0x02, 0x03, 0x04, 0x11, 0x22, 0x33, 0x44],
+      fields: [
+        { name: 'MHDR', cls: 'mhdr', start: 0, len: 1 },
+        { name: 'DevAddr', cls: 'devaddr', start: 1, len: 4 },
+        { name: 'FCtrl', cls: 'fctrl', start: 5, len: 1 },
+        { name: 'FCnt', cls: 'fcnt', start: 6, len: 2 },
+        { name: 'FPort', cls: 'fport', start: 8, len: 1 },
+        { name: 'FRMPayload', cls: 'payload', start: 9, len: 3 },
+        { name: 'MIC', cls: 'mic', start: 12, len: 4 }
+      ],
+      legend: [
+        { cls: 'mhdr', label: 'MHDR' }, { cls: 'devaddr', label: 'DevAddr' },
+        { cls: 'fctrl', label: 'FCtrl' }, { cls: 'fcnt', label: 'FCnt' },
+        { cls: 'fport', label: 'FPort' }, { cls: 'payload', label: 'FRMPayload' },
+        { cls: 'mic', label: 'MIC' }
+      ]
+    },
+    'join-request': {
+      label: 'Join Request',
+      bytes: [0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10, 0x11, 0x34, 0x12, 0xAA, 0xBB, 0xCC, 0xDD],
+      fields: [
+        { name: 'MHDR', cls: 'mhdr', start: 0, len: 1 },
+        { name: 'JoinEUI', cls: 'joineui', start: 1, len: 8 },
+        { name: 'DevEUI', cls: 'deveui', start: 9, len: 8 },
+        { name: 'DevNonce', cls: 'devnonce', start: 17, len: 2 },
+        { name: 'MIC', cls: 'mic', start: 19, len: 4 }
+      ],
+      legend: [
+        { cls: 'mhdr', label: 'MHDR' }, { cls: 'joineui', label: 'JoinEUI' },
+        { cls: 'deveui', label: 'DevEUI' }, { cls: 'devnonce', label: 'DevNonce' },
+        { cls: 'mic', label: 'MIC' }
+      ]
+    },
+    'join-accept': {
+      label: 'Join Accept',
+      bytes: [0x20, 0xAA, 0xBB, 0xCC, 0x01, 0x02, 0x03, 0xEF, 0xCD, 0xAB, 0x01, 0x03, 0x01, 0x11, 0x22, 0x33, 0x44],
+      fields: [
+        { name: 'MHDR', cls: 'mhdr', start: 0, len: 1 },
+        { name: 'JoinNonce', cls: 'joinnonce', start: 1, len: 3 },
+        { name: 'HomeNetID', cls: 'homenetid', start: 4, len: 3 },
+        { name: 'DevAddr', cls: 'devaddr', start: 7, len: 4 },
+        { name: 'DLSettings', cls: 'dlsettings', start: 11, len: 1 },
+        { name: 'RxDelay', cls: 'rxdelay', start: 12, len: 1 },
+        { name: 'MIC', cls: 'mic', start: 13, len: 4 }
+      ],
+      legend: [
+        { cls: 'mhdr', label: 'MHDR' }, { cls: 'joinnonce', label: 'JoinNonce' },
+        { cls: 'homenetid', label: 'HomeNetID' }, { cls: 'devaddr', label: 'DevAddr' },
+        { cls: 'dlsettings', label: 'DLSettings' }, { cls: 'rxdelay', label: 'RxDelay' },
+        { cls: 'mic', label: 'MIC' }
+      ]
+    }
+  },
+
+  parseMHDR(byte) {
+    const mtype = (byte >> 5) & 0x07;
+    const mtypeNames = ['Join Request','Join Accept','Unconfirmed Data Up','Unconfirmed Data Down','Confirmed Data Up','Confirmed Data Down','Rejoin Request','Proprietary'];
+    const rfu = (byte >> 2) & 0x07;
+    const major = byte & 0x03;
+    return [
+      { name: 'MType', bits: '7:5', value: mtype, desc: mtypeNames[mtype] || 'Unknown' },
+      { name: 'RFU', bits: '4:2', value: rfu, desc: 'Reserved for future use' },
+      { name: 'Major', bits: '1:0', value: major, desc: major === 0 ? 'LoRaWAN R1' : 'Unknown' }
+    ];
+  },
+
+  parseFCtrl(byte, isUplink) {
+    const adr = (byte >> 7) & 1;
+    const bit6 = (byte >> 6) & 1;
+    const ack = (byte >> 5) & 1;
+    const bit4 = (byte >> 4) & 1;
+    const foptslen = byte & 0x0F;
+    if (isUplink) {
+      return [
+        { name: 'ADR', bits: '7', value: adr, desc: adr ? 'ADR enabled' : 'ADR disabled' },
+        { name: 'ADRACKReq', bits: '6', value: bit6, desc: bit6 ? 'ADR ack requested' : 'No ADR ack request' },
+        { name: 'ACK', bits: '5', value: ack, desc: ack ? 'Acknowledging previous downlink' : 'No ack' },
+        { name: 'ClassB', bits: '4', value: bit4, desc: bit4 ? 'Class B enabled' : 'Class A' },
+        { name: 'FOptsLen', bits: '3:0', value: foptslen, desc: foptslen + ' bytes of FOpts' }
+      ];
+    } else {
+      return [
+        { name: 'ADR', bits: '7', value: adr, desc: adr ? 'ADR enabled' : 'ADR disabled' },
+        { name: 'RFU', bits: '6', value: bit6, desc: 'Reserved' },
+        { name: 'ACK', bits: '5', value: ack, desc: ack ? 'Acknowledging previous uplink' : 'No ack' },
+        { name: 'FPending', bits: '4', value: bit4, desc: bit4 ? 'More data pending' : 'No pending data' },
+        { name: 'FOptsLen', bits: '3:0', value: foptslen, desc: foptslen + ' bytes of FOpts' }
+      ];
+    }
+  },
+
+  parseDLSettings(byte) {
+    const optNeg = (byte >> 7) & 1;
+    const rx1droffset = (byte >> 4) & 0x07;
+    const rx2dr = byte & 0x0F;
+    return [
+      { name: 'OptNeg', bits: '7', value: optNeg, desc: optNeg ? 'LoRaWAN 1.1+' : 'LoRaWAN 1.0.x' },
+      { name: 'RX1DROffset', bits: '6:4', value: rx1droffset, desc: 'RX1 data rate offset: ' + rx1droffset },
+      { name: 'RX2DataRate', bits: '3:0', value: rx2dr, desc: 'RX2 data rate: DR' + rx2dr }
+    ];
+  },
+
+  getFieldForByteIndex(index) {
+    const frame = this.frames[this.frameType];
+    for (const f of frame.fields) {
+      if (index >= f.start && index < f.start + f.len) return f;
+    }
+    return null;
+  },
+
+  renderByteGrid() {
+    const frame = this.frames[this.frameType];
+    const grid = document.getElementById('byte-grid');
+    grid.innerHTML = '';
+    frame.bytes.forEach((b, i) => {
+      const field = this.getFieldForByteIndex(i);
+      const el = document.createElement('div');
+      el.className = 'byte-block' + (field ? ' ' + field.cls : '') + (i === this.selectedByteIndex ? ' selected' : '');
+      el.textContent = b.toString(16).toUpperCase().padStart(2, '0');
+      el.addEventListener('click', () => {
+        this.selectedByteIndex = i;
+        this.renderByteGrid();
+        this.renderBitBreakdown(i);
+      });
+      grid.appendChild(el);
+    });
+    // Hex output
+    document.getElementById('hex-output').textContent =
+      frame.bytes.map(b => b.toString(16).toUpperCase().padStart(2, '0')).join('');
+    // Legend
+    const legend = document.getElementById('packet-legend');
+    legend.innerHTML = frame.legend.map(l =>
+      '<div class="legend-swatch"><div class="swatch ' + l.cls + '"></div>' + l.label + '</div>'
+    ).join('');
+  },
+
+  renderBitBreakdown(index) {
+    const container = document.getElementById('bit-breakdown');
+    const frame = this.frames[this.frameType];
+    const field = this.getFieldForByteIndex(index);
+    if (!field) {
+      container.innerHTML = '<div class="bit-breakdown-empty">No field data for this byte</div>';
+      return;
+    }
+    const byte = frame.bytes[index];
+    let bits = [];
+    if (field.name === 'MHDR') {
+      bits = this.parseMHDR(byte);
+    } else if (field.name === 'FCtrl') {
+      const isUp = this.frameType === 'data-uplink';
+      bits = this.parseFCtrl(byte, isUp);
+    } else if (field.name === 'DLSettings') {
+      bits = this.parseDLSettings(byte);
+    } else {
+      // Generic: show the byte value and field info
+      const posInField = index - field.start;
+      const isLE = ['DevAddr','FCnt','JoinEUI','DevEUI','DevNonce','JoinNonce','HomeNetID'].includes(field.name);
+      bits = [{
+        name: field.name + ' [byte ' + posInField + ']',
+        bits: '7:0',
+        value: '0x' + byte.toString(16).toUpperCase().padStart(2, '0'),
+        desc: field.len > 1 ? (isLE ? 'Little-endian byte ' + posInField + ' of ' + field.len : 'Byte ' + posInField + ' of ' + field.len) : 'Single byte field'
+      }];
+    }
+    container.innerHTML = '<div style="font-family:var(--mono);font-size:13px;color:var(--amber);margin-bottom:12px">' +
+      field.name + ' &mdash; 0x' + byte.toString(16).toUpperCase().padStart(2, '0') +
+      ' (' + byte.toString(2).padStart(8, '0') + ')</div>' +
+      bits.map(b =>
+        '<div class="bit-field"><span class="bit-field-name">' + b.name + '</span>' +
+        '<span class="bit-field-bits">bits[' + b.bits + ']</span>' +
+        '<span class="bit-field-value">' + b.value + '</span></div>' +
+        '<div class="bit-field-desc">' + b.desc + '</div>'
+      ).join('');
+  },
+
+  selectFrameType(type) {
+    this.frameType = type;
+    this.selectedByteIndex = -1;
+    document.querySelectorAll('.frame-type-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.frame === type);
+    });
+    this.renderByteGrid();
+    document.getElementById('bit-breakdown').innerHTML =
+      '<div class="bit-breakdown-empty">Click a byte to inspect its fields</div>';
+  },
+
+  copyHex() {
+    const hex = document.getElementById('hex-output').textContent;
+    navigator.clipboard.writeText(hex).then(() => {
+      const btn = document.querySelector('.raw-hex-output .copy-btn');
+      const orig = btn.textContent;
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = orig, 1500);
+    });
+  }
+};
+
+// Init frame type selector
+document.querySelectorAll('.frame-type-btn').forEach(btn => {
+  btn.addEventListener('click', () => packetSimulator.selectFrameType(btn.dataset.frame));
+});
+packetSimulator.renderByteGrid();
+
+// ========== CONFIG BUILDER ==========
+const configBuilder = {
+  debounceTimer: null,
+
+  toggleSection(header) {
+    const body = header.nextElementSibling;
+    const icon = header.querySelector('.toggle-icon');
+    body.classList.toggle('open');
+    icon.classList.toggle('open');
+  },
+
+  toggleIntegration(name, checked) {
+    const el = document.getElementById('int-' + name);
+    if (el) el.classList.toggle('visible', checked);
+    this.update();
+  },
+
+  generateSecret() {
+    const arr = new Uint8Array(32);
+    crypto.getRandomValues(arr);
+    const secret = Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('');
+    document.getElementById('api-secret').value = secret;
+    this.update();
+  },
+
+  syncFormToState() {
+    const dbType = document.querySelector('input[name="db_type"]:checked').value;
+    // Toggle conditional fields
+    document.getElementById('pg-fields').classList.toggle('visible', dbType === 'postgresql');
+    document.getElementById('sqlite-fields').classList.toggle('visible', dbType === 'sqlite');
+
+    const state = {
+      dbType,
+      pgDsn: document.getElementById('pg-dsn').value,
+      pgMaxConn: parseInt(document.getElementById('pg-max-conn').value) || 10,
+      sqlitePath: document.getElementById('sqlite-path').value,
+      redisServers: document.getElementById('redis-servers').value,
+      redisCluster: document.getElementById('redis-cluster').checked,
+      netId: document.getElementById('net-id').value,
+      regions: [],
+      apiBind: document.getElementById('api-bind').value,
+      apiSecret: document.getElementById('api-secret').value,
+      integrations: [],
+      mqttServer: (document.querySelector('[data-int="mqtt-server"]') || {}).value || '',
+      mqttUsername: (document.querySelector('[data-int="mqtt-username"]') || {}).value || '',
+      mqttPassword: (document.querySelector('[data-int="mqtt-password"]') || {}).value || '',
+      pgIntDsn: (document.querySelector('[data-int="pg-int-dsn"]') || {}).value || '',
+      amqpUrl: (document.querySelector('[data-int="amqp-url"]') || {}).value || '',
+      kafkaBrokers: (document.querySelector('[data-int="kafka-brokers"]') || {}).value || '',
+      kafkaTopic: (document.querySelector('[data-int="kafka-topic"]') || {}).value || '',
+      authType: document.querySelector('input[name="auth_type"]:checked').value
+    };
+
+    document.querySelectorAll('#region-checkboxes input:checked').forEach(cb => {
+      state.regions.push(cb.value);
+    });
+    document.querySelectorAll('.integration-toggle:checked').forEach(cb => {
+      state.integrations.push(cb.value);
+    });
+
+    return state;
+  },
+
+  generateTOML(state) {
+    let t = '';
+    t += '# ChirpStack Configuration\n';
+    t += '# Generated by Configuration Builder\n\n';
+    t += '[logging]\n';
+    t += '  level = "info"\n\n';
+
+    if (state.dbType === 'postgresql') {
+      t += '[postgresql]\n';
+      t += '  dsn = "' + state.pgDsn + '"\n';
+      t += '  max_open_connections = ' + state.pgMaxConn + '\n\n';
+    } else {
+      t += '[sqlite]\n';
+      t += '  path = "' + state.sqlitePath + '"\n\n';
+    }
+
+    t += '[redis]\n';
+    t += '  servers = [\n';
+    t += '    "' + state.redisServers + '",\n';
+    t += '  ]\n';
+    t += '  cluster = ' + state.redisCluster + '\n\n';
+
+    t += '[network]\n';
+    t += '  net_id = "' + state.netId + '"\n';
+    t += '  enabled_regions = [\n';
+    state.regions.forEach(r => {
+      t += '    "' + r + '",\n';
+    });
+    t += '  ]\n\n';
+
+    t += '[api]\n';
+    t += '  bind = "' + state.apiBind + '"\n';
+    if (state.apiSecret) {
+      t += '  secret = "' + state.apiSecret + '"\n';
+    }
+    t += '\n';
+
+    t += '[integration]\n';
+    t += '  enabled = [\n';
+    state.integrations.forEach(i => {
+      t += '    "' + i + '",\n';
+    });
+    t += '  ]\n\n';
+
+    if (state.integrations.includes('mqtt')) {
+      t += '  [integration.mqtt]\n';
+      t += '    server = "' + state.mqttServer + '"\n';
+      if (state.mqttUsername) t += '    username = "' + state.mqttUsername + '"\n';
+      if (state.mqttPassword) t += '    password = "' + state.mqttPassword + '"\n';
+      t += '\n';
+    }
+    if (state.integrations.includes('postgresql')) {
+      t += '  [integration.postgresql]\n';
+      t += '    dsn = "' + state.pgIntDsn + '"\n\n';
+    }
+    if (state.integrations.includes('amqp')) {
+      t += '  [integration.amqp]\n';
+      t += '    url = "' + state.amqpUrl + '"\n\n';
+    }
+    if (state.integrations.includes('kafka')) {
+      t += '  [integration.kafka]\n';
+      t += '    brokers = [\n';
+      t += '      "' + state.kafkaBrokers + '",\n';
+      t += '    ]\n';
+      t += '    topic = "' + state.kafkaTopic + '"\n\n';
+    }
+
+    t += '[user_authentication]\n';
+    t += '  type = "' + state.authType + '"\n';
+
+    return t;
+  },
+
+  highlightTOML(toml) {
+    return toml
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      // Comments
+      .replace(/(#.*)/g, '<span class="toml-comment">$1</span>')
+      // Section headers
+      .replace(/^(\s*\[[\w.]+\])/gm, '<span class="toml-section">$1</span>')
+      // Strings (after section headers to avoid double-matching)
+      .replace(/"([^"]*?)"/g, '<span class="toml-string">"$1"</span>')
+      // Booleans
+      .replace(/= (true|false)/g, '= <span class="toml-boolean">$1</span>')
+      // Numbers (standalone)
+      .replace(/= (\d+)$/gm, '= <span class="toml-number">$1</span>')
+      // Keys
+      .replace(/^(\s*\w[\w_]*)\s*=/gm, '<span class="toml-key">$1</span> =');
+  },
+
+  update() {
+    clearTimeout(this.debounceTimer);
+    this.debounceTimer = setTimeout(() => {
+      const state = this.syncFormToState();
+      const toml = this.generateTOML(state);
+      document.getElementById('toml-preview').innerHTML = this.highlightTOML(toml);
+    }, 100);
+  },
+
+  copyTOML() {
+    const state = this.syncFormToState();
+    const toml = this.generateTOML(state);
+    navigator.clipboard.writeText(toml).then(() => {
+      const btns = document.querySelectorAll('.config-preview-actions button');
+      const btn = btns[0];
+      const orig = btn.textContent;
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = orig, 1500);
+    });
+  },
+
+  downloadTOML() {
+    const state = this.syncFormToState();
+    const toml = this.generateTOML(state);
+    const blob = new Blob([toml], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'chirpstack.toml';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+};
+
+// Initialize config builder
+configBuilder.update();
 </script>
 
 </body>

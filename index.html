@@ -1,0 +1,1634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChirpStack — Open-Source LoRaWAN Network Server</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg-deep: #060a10;
+  --bg-primary: #0a0e14;
+  --bg-raised: #0f1520;
+  --bg-card: #121a28;
+  --bg-card-hover: #162030;
+  --teal: #00e5c7;
+  --teal-dim: #00c4aa;
+  --teal-glow: rgba(0,229,199,0.15);
+  --teal-glow-strong: rgba(0,229,199,0.3);
+  --amber: #f5a623;
+  --amber-dim: #d4901e;
+  --amber-glow: rgba(245,166,35,0.12);
+  --rust-orange: #e8622c;
+  --text-primary: #e2e8f0;
+  --text-secondary: #8892a4;
+  --text-dim: #4a5568;
+  --border: #1a2435;
+  --border-light: #243045;
+  --mono: 'DM Mono', 'Fira Code', monospace;
+  --serif: 'Source Serif 4', Georgia, serif;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--serif);
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  overflow-x: hidden;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ========== NOISE TEXTURE OVERLAY ========== */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+
+/* ========== GRID BACKGROUND ========== */
+.grid-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 60px 60px;
+  opacity: 0.15;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, black 20%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, black 20%, transparent 70%);
+}
+
+/* ========== SCROLL REVEAL ========== */
+.reveal {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+.reveal-delay-4 { transition-delay: 0.4s; }
+.reveal-delay-5 { transition-delay: 0.5s; }
+.reveal-delay-6 { transition-delay: 0.6s; }
+
+/* ========== NAV ========== */
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  padding: 0 40px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(6,10,16,0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  font-family: var(--mono);
+}
+
+.nav-logo {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--teal);
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nav-logo .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--teal);
+  box-shadow: 0 0 12px var(--teal-glow-strong);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; box-shadow: 0 0 12px var(--teal-glow-strong); }
+  50% { opacity: 0.5; box-shadow: 0 0 4px var(--teal-glow); }
+}
+
+.nav-links {
+  display: flex;
+  gap: 32px;
+  list-style: none;
+}
+
+.nav-links a {
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  transition: color 0.3s;
+}
+
+.nav-links a:hover { color: var(--teal); }
+
+/* ========== HERO ========== */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 120px 60px 80px;
+  overflow: hidden;
+}
+
+.hero-signal-container {
+  position: absolute;
+  top: 50%;
+  right: -5%;
+  transform: translateY(-50%);
+  width: 700px;
+  height: 700px;
+  opacity: 0.5;
+}
+
+.signal-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 1px solid var(--teal);
+  opacity: 0;
+  animation: signal-propagate 4s ease-out infinite;
+}
+
+.signal-ring:nth-child(1) { width: 80px; height: 80px; animation-delay: 0s; }
+.signal-ring:nth-child(2) { width: 200px; height: 200px; animation-delay: 0.6s; }
+.signal-ring:nth-child(3) { width: 340px; height: 340px; animation-delay: 1.2s; }
+.signal-ring:nth-child(4) { width: 500px; height: 500px; animation-delay: 1.8s; }
+.signal-ring:nth-child(5) { width: 680px; height: 680px; animation-delay: 2.4s; }
+
+@keyframes signal-propagate {
+  0% { opacity: 0.6; transform: translate(-50%, -50%) scale(0.8); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.2); }
+}
+
+.signal-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  background: var(--teal);
+  border-radius: 50%;
+  box-shadow: 0 0 30px var(--teal-glow-strong), 0 0 60px var(--teal-glow);
+}
+
+.hero-label {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--teal);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 24px;
+  opacity: 0;
+  animation: hero-fade 0.8s 0.2s forwards;
+}
+
+.hero h1 {
+  font-family: var(--mono);
+  font-size: clamp(48px, 7vw, 96px);
+  font-weight: 500;
+  line-height: 1.05;
+  max-width: 800px;
+  color: var(--text-primary);
+  opacity: 0;
+  animation: hero-fade 0.8s 0.4s forwards;
+}
+
+.hero h1 span {
+  color: var(--teal);
+  text-shadow: 0 0 40px var(--teal-glow-strong);
+}
+
+.hero-desc {
+  font-size: 20px;
+  color: var(--text-secondary);
+  max-width: 580px;
+  margin-top: 32px;
+  line-height: 1.8;
+  opacity: 0;
+  animation: hero-fade 0.8s 0.6s forwards;
+}
+
+@keyframes hero-fade {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.hero-stats {
+  display: flex;
+  gap: 48px;
+  margin-top: 56px;
+  opacity: 0;
+  animation: hero-fade 0.8s 0.8s forwards;
+}
+
+.hero-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hero-stat-value {
+  font-family: var(--mono);
+  font-size: 36px;
+  font-weight: 500;
+  color: var(--teal);
+}
+
+.hero-stat-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.hero-scroll-hint {
+  position: absolute;
+  bottom: 40px;
+  left: 60px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  opacity: 0;
+  animation: hero-fade 0.8s 1.2s forwards;
+}
+
+.scroll-line {
+  width: 40px;
+  height: 1px;
+  background: var(--text-dim);
+  position: relative;
+  overflow: hidden;
+}
+
+.scroll-line::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: var(--teal);
+  animation: scroll-sweep 2s ease-in-out infinite;
+}
+
+@keyframes scroll-sweep {
+  0% { left: -100%; }
+  50% { left: 100%; }
+  100% { left: 100%; }
+}
+
+/* ========== SECTIONS ========== */
+section {
+  position: relative;
+  z-index: 1;
+  padding: 100px 60px;
+}
+
+.section-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--amber);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.section-label::before {
+  content: '';
+  width: 24px;
+  height: 1px;
+  background: var(--amber);
+}
+
+.section-title {
+  font-family: var(--mono);
+  font-size: clamp(28px, 4vw, 44px);
+  font-weight: 500;
+  line-height: 1.2;
+  max-width: 700px;
+  margin-bottom: 24px;
+}
+
+.section-desc {
+  font-size: 17px;
+  color: var(--text-secondary);
+  max-width: 620px;
+  line-height: 1.8;
+  margin-bottom: 56px;
+}
+
+/* ========== DIAGONAL DIVIDER ========== */
+.diagonal-divider {
+  height: 120px;
+  background: linear-gradient(172deg, var(--bg-deep) 49.5%, var(--bg-primary) 50.5%);
+  position: relative;
+  z-index: 1;
+}
+
+.diagonal-divider-reverse {
+  height: 120px;
+  background: linear-gradient(172deg, var(--bg-primary) 49.5%, var(--bg-deep) 50.5%);
+  position: relative;
+  z-index: 1;
+}
+
+/* ========== ARCHITECTURE SECTION ========== */
+.arch-section {
+  background: var(--bg-primary);
+}
+
+.arch-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  max-width: 1200px;
+}
+
+.arch-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  padding: 36px 32px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.4s, transform 0.4s, box-shadow 0.4s;
+}
+
+.arch-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--teal), transparent);
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+.arch-card:hover {
+  border-color: var(--border-light);
+  transform: translateY(-4px);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.arch-card:hover::before { opacity: 1; }
+
+.arch-card-icon {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--teal);
+  background: var(--teal-glow);
+  padding: 6px 14px;
+  display: inline-block;
+  margin-bottom: 20px;
+  letter-spacing: 1px;
+}
+
+.arch-card h3 {
+  font-family: var(--mono);
+  font-size: 18px;
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+
+.arch-card p {
+  font-size: 15px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+.arch-card .file-count {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.arch-card .file-count span { color: var(--amber); }
+
+/* ========== DATA FLOW SECTION ========== */
+.flow-section {
+  background: var(--bg-deep);
+}
+
+.flow-diagram {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  max-width: 1200px;
+  margin: 0 auto;
+  flex-wrap: wrap;
+}
+
+.flow-node {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  padding: 32px 28px;
+  min-width: 200px;
+  text-align: center;
+  position: relative;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.flow-node:hover {
+  border-color: var(--teal-dim);
+  box-shadow: 0 0 30px var(--teal-glow);
+}
+
+.flow-node-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.flow-node-title {
+  font-family: var(--mono);
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.flow-node-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 8px;
+  line-height: 1.6;
+}
+
+.flow-node.core {
+  background: linear-gradient(135deg, var(--bg-card), #0d1f2d);
+  border-color: var(--teal-dim);
+  padding: 40px 36px;
+  min-width: 280px;
+  box-shadow: 0 0 40px var(--teal-glow);
+}
+
+.flow-node.core .flow-node-title { color: var(--teal); font-size: 22px; }
+
+.flow-arrow {
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 22px;
+  position: relative;
+}
+
+.flow-arrow-line {
+  width: 60px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--teal-dim), var(--teal));
+  position: relative;
+}
+
+.flow-arrow-line::after {
+  content: '';
+  position: absolute;
+  right: -1px;
+  top: -4px;
+  width: 0;
+  height: 0;
+  border-left: 8px solid var(--teal);
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+}
+
+.flow-arrow-label {
+  position: absolute;
+  top: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--teal-dim);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.flow-packet {
+  position: absolute;
+  top: -1px;
+  left: -10px;
+  width: 10px;
+  height: 3px;
+  background: var(--teal);
+  box-shadow: 0 0 8px var(--teal);
+  animation: packet-move 2.5s ease-in-out infinite;
+}
+
+@keyframes packet-move {
+  0% { left: -10px; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { left: 60px; opacity: 0; }
+}
+
+/* ========== INTEGRATIONS ========== */
+.integrations-section {
+  background: var(--bg-primary);
+}
+
+.integration-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  max-width: 1200px;
+}
+
+.integration-chip {
+  font-family: var(--mono);
+  font-size: 13px;
+  padding: 16px 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.3s;
+  cursor: default;
+}
+
+.integration-chip:hover {
+  border-color: var(--border-light);
+  color: var(--text-primary);
+  background: var(--bg-card-hover);
+}
+
+.integration-chip .chip-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.chip-dot.global { background: var(--teal); box-shadow: 0 0 6px var(--teal-glow-strong); }
+.chip-dot.per-app { background: var(--amber); box-shadow: 0 0 6px var(--amber-glow); }
+
+.integration-legend {
+  display: flex;
+  gap: 32px;
+  margin-bottom: 32px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ========== COMPONENTS ========== */
+.components-section {
+  background: var(--bg-deep);
+}
+
+.component-row {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 60px;
+  max-width: 1200px;
+  margin-bottom: 64px;
+  align-items: start;
+}
+
+.component-row:last-child { margin-bottom: 0; }
+
+.component-header {
+  position: sticky;
+  top: 100px;
+}
+
+.component-header h3 {
+  font-family: var(--mono);
+  font-size: 22px;
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+
+.component-header p {
+  font-size: 15px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+.component-details {
+  display: grid;
+  gap: 12px;
+}
+
+.component-detail-item {
+  display: flex;
+  gap: 16px;
+  padding: 20px 24px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 2px solid var(--teal);
+  transition: background 0.3s;
+}
+
+.component-detail-item:hover { background: var(--bg-card-hover); }
+
+.component-detail-item .idx {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--teal-dim);
+  flex-shrink: 0;
+  padding-top: 2px;
+}
+
+.component-detail-item h4 {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.component-detail-item p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* ========== SCENARIOS ========== */
+.scenarios-section {
+  background: var(--bg-primary);
+}
+
+.scenario-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  max-width: 1200px;
+}
+
+.scenario-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  padding: 40px 36px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s;
+}
+
+.scenario-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--teal), transparent);
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+.scenario-card:hover {
+  border-color: var(--border-light);
+  transform: translateY(-2px);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.25);
+}
+
+.scenario-card:hover::after { opacity: 1; }
+
+.scenario-number {
+  font-family: var(--mono);
+  font-size: 48px;
+  font-weight: 300;
+  color: var(--bg-raised);
+  position: absolute;
+  top: 20px;
+  right: 28px;
+  line-height: 1;
+  user-select: none;
+}
+
+.scenario-card:hover .scenario-number { color: var(--border); }
+
+.scenario-tag {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--teal);
+  background: var(--teal-glow);
+  padding: 4px 12px;
+  display: inline-block;
+  margin-bottom: 16px;
+}
+
+.scenario-card h3 {
+  font-family: var(--mono);
+  font-size: 20px;
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+
+.scenario-card p {
+  font-size: 15px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin-bottom: 16px;
+}
+
+.scenario-why {
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.7;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.scenario-why strong {
+  color: var(--amber);
+  font-weight: 400;
+}
+
+/* ========== DEPLOYMENT ========== */
+.deploy-section {
+  background: var(--bg-deep);
+}
+
+.deploy-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  max-width: 1200px;
+}
+
+.deploy-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  padding: 32px 28px;
+  text-align: center;
+  transition: all 0.4s;
+  position: relative;
+}
+
+.deploy-card:hover {
+  border-color: var(--teal-dim);
+  box-shadow: 0 0 30px var(--teal-glow);
+  transform: translateY(-4px);
+}
+
+.deploy-icon {
+  font-family: var(--mono);
+  font-size: 32px;
+  margin-bottom: 16px;
+  display: block;
+  color: var(--teal);
+}
+
+.deploy-card h3 {
+  font-family: var(--mono);
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.deploy-card p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.deploy-card .deploy-db {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--amber);
+  margin-top: 12px;
+  letter-spacing: 0.5px;
+}
+
+.deploy-platforms {
+  max-width: 1200px;
+  margin-top: 40px;
+  padding: 28px 32px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 40px;
+}
+
+.deploy-platforms-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.platform-tags {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.platform-tag {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--text-secondary);
+  padding: 6px 16px;
+  border: 1px solid var(--border);
+  background: var(--bg-raised);
+}
+
+/* ========== STATS BAR ========== */
+.stats-bar {
+  background: var(--bg-primary);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 48px 60px;
+  position: relative;
+  z-index: 1;
+}
+
+.stats-inner {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 32px;
+  max-width: 1200px;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-value {
+  font-family: var(--mono);
+  font-size: 32px;
+  font-weight: 500;
+  color: var(--teal);
+  display: block;
+}
+
+.stat-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+/* ========== API LANGUAGES ========== */
+.api-section {
+  background: var(--bg-primary);
+}
+
+.lang-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  max-width: 1200px;
+}
+
+.lang-tag {
+  font-family: var(--mono);
+  font-size: 14px;
+  padding: 12px 24px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  transition: all 0.3s;
+  cursor: default;
+}
+
+.lang-tag:hover {
+  border-color: var(--teal-dim);
+  color: var(--teal);
+  background: var(--teal-glow);
+}
+
+/* ========== FOOTER ========== */
+footer {
+  position: relative;
+  z-index: 1;
+  background: var(--bg-deep);
+  border-top: 1px solid var(--border);
+  padding: 48px 60px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.footer-left {
+  font-family: var(--mono);
+  font-size: 14px;
+  color: var(--text-dim);
+}
+
+.footer-left a {
+  color: var(--teal-dim);
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.footer-left a:hover { color: var(--teal); }
+
+.footer-right {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+}
+
+/* ========== CIRCUIT TRACES (decorative) ========== */
+.circuit-trace {
+  position: absolute;
+  background: var(--border);
+  z-index: 0;
+}
+
+.circuit-trace.horizontal {
+  height: 1px;
+  width: 200px;
+}
+
+.circuit-trace.vertical {
+  width: 1px;
+  height: 150px;
+}
+
+.circuit-node {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border: 1px solid var(--teal-dim);
+  border-radius: 50%;
+  z-index: 0;
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 1024px) {
+  .arch-grid { grid-template-columns: repeat(2, 1fr); }
+  .scenario-grid { grid-template-columns: 1fr; }
+  .deploy-grid { grid-template-columns: repeat(2, 1fr); }
+  .stats-inner { grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .component-row { grid-template-columns: 1fr; gap: 24px; }
+  .component-header { position: static; }
+  .flow-diagram { flex-direction: column; }
+  .flow-arrow { transform: rotate(90deg); padding: 8px 0; }
+}
+
+@media (max-width: 768px) {
+  nav { padding: 0 24px; }
+  .nav-links { display: none; }
+  .hero { padding: 100px 24px 60px; }
+  section { padding: 60px 24px; }
+  .hero-stats { flex-wrap: wrap; gap: 24px; }
+  .arch-grid { grid-template-columns: 1fr; }
+  .deploy-grid { grid-template-columns: 1fr; }
+  .stats-inner { grid-template-columns: repeat(2, 1fr); }
+  footer { flex-direction: column; gap: 16px; text-align: center; }
+  .deploy-platforms { flex-direction: column; gap: 16px; }
+  .stats-bar { padding: 36px 24px; }
+  .hero-signal-container { display: none; }
+  .hero-scroll-hint { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+
+<!-- ========== NAV ========== -->
+<nav>
+  <div class="nav-logo">
+    <span class="dot"></span>
+    chirpstack // network-server
+  </div>
+  <ul class="nav-links">
+    <li><a href="#architecture">Architecture</a></li>
+    <li><a href="#flow">Data Flow</a></li>
+    <li><a href="#components">Components</a></li>
+    <li><a href="#integrations">Integrations</a></li>
+    <li><a href="#scenarios">Scenarios</a></li>
+    <li><a href="#deploy">Deploy</a></li>
+  </ul>
+</nav>
+
+<!-- ========== HERO ========== -->
+<section class="hero">
+  <div class="hero-signal-container">
+    <div class="signal-center"></div>
+    <div class="signal-ring"></div>
+    <div class="signal-ring"></div>
+    <div class="signal-ring"></div>
+    <div class="signal-ring"></div>
+    <div class="signal-ring"></div>
+  </div>
+
+  <div class="hero-label">Open-Source LoRaWAN Network Server</div>
+  <h1>The brain behind your <span>IoT network</span></h1>
+  <p class="hero-desc">
+    ChirpStack is a full-featured, open-source LoRaWAN Network Server written in Rust.
+    It manages devices, processes radio frames, handles the LoRaWAN protocol, and delivers
+    data to your applications and cloud services.
+  </p>
+
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <span class="hero-stat-value">v4.16</span>
+      <span class="hero-stat-label">Latest Release</span>
+    </div>
+    <div class="hero-stat">
+      <span class="hero-stat-value">Rust</span>
+      <span class="hero-stat-label">Core Language</span>
+    </div>
+    <div class="hero-stat">
+      <span class="hero-stat-value">MIT</span>
+      <span class="hero-stat-label">License</span>
+    </div>
+    <div class="hero-stat">
+      <span class="hero-stat-value">6</span>
+      <span class="hero-stat-label">Workspace Crates</span>
+    </div>
+  </div>
+
+  <div class="hero-scroll-hint">
+    <div class="scroll-line"></div>
+    Scroll to explore
+  </div>
+</section>
+
+<!-- ========== STATS BAR ========== -->
+<div class="stats-bar">
+  <div class="stats-inner reveal">
+    <div class="stat-item">
+      <span class="stat-value" data-count="242">0</span>
+      <span class="stat-label">Rust Files</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-value" data-count="168">0</span>
+      <span class="stat-label">TypeScript Files</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-value" data-count="12">0</span>
+      <span class="stat-label">LoRaWAN Regions</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-value" data-count="18">0</span>
+      <span class="stat-label">Integrations</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-value" data-count="10">0</span>
+      <span class="stat-label">API Languages</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-value" data-count="19">0</span>
+      <span class="stat-label">Proto Definitions</span>
+    </div>
+  </div>
+</div>
+
+<!-- ========== ARCHITECTURE ========== -->
+<section class="arch-section" id="architecture">
+  <div class="section-label reveal">// 01</div>
+  <h2 class="section-title reveal reveal-delay-1">Repository Architecture</h2>
+  <p class="section-desc reveal reveal-delay-2">
+    A Rust workspace of 6 crates, a React/TypeScript web UI, and Protocol Buffer API definitions
+    with generated bindings in 10 programming languages.
+  </p>
+
+  <div class="arch-grid">
+    <div class="arch-card reveal reveal-delay-1">
+      <span class="arch-card-icon">chirpstack/</span>
+      <h3>Network Server Core</h3>
+      <p>The main application crate. Handles uplink/downlink processing, device management, MAC commands, gRPC API, storage, and all integration dispatch.</p>
+      <div class="file-count"><span>192</span> Rust source files &middot; <span>29</span> PG migrations</div>
+    </div>
+    <div class="arch-card reveal reveal-delay-2">
+      <span class="arch-card-icon">lrwn/</span>
+      <h3>LoRaWAN Frame Library</h3>
+      <p>Standalone library for encoding and decoding LoRaWAN physical payloads, MAC commands, cryptographic operations, and regional parameter sets.</p>
+      <div class="file-count"><span>20</span> source files &middot; <span>12</span> region implementations</div>
+    </div>
+    <div class="arch-card reveal reveal-delay-3">
+      <span class="arch-card-icon">api/</span>
+      <h3>API & Proto Definitions</h3>
+      <p>Protocol Buffer definitions for 10 gRPC services, plus generated client/server code for Rust, Go, Python, Java, Kotlin, C#, PHP, C, JS, and TypeScript.</p>
+      <div class="file-count"><span>19</span> proto files &middot; <span>10</span> language bindings</div>
+    </div>
+    <div class="arch-card reveal reveal-delay-4">
+      <span class="arch-card-icon">ui/</span>
+      <h3>Web Interface</h3>
+      <p>React 18 + TypeScript admin dashboard with Ant Design, Leaflet maps, Chart.js metrics, Ace code editor, and gRPC-Web for browser communication.</p>
+      <div class="file-count"><span>168</span> TypeScript files &middot; Vite build</div>
+    </div>
+    <div class="arch-card reveal reveal-delay-5">
+      <span class="arch-card-icon">backend/</span>
+      <h3>Gateway Backend</h3>
+      <p>Library handling gateway-to-server communication, key wrapping for secure joins, and HTTP client logic for LoRaWAN Backend Interfaces.</p>
+      <div class="file-count"><span>48KB</span> core library</div>
+    </div>
+    <div class="arch-card reveal reveal-delay-6">
+      <span class="arch-card-icon">lrwn-filters/</span>
+      <h3>Payload Filters</h3>
+      <p>Utility library for filtering LoRaWAN payloads based on DevAddr and JoinEUI prefix ranges. Used for routing and roaming decisions.</p>
+      <div class="file-count">Focused utility crate</div>
+    </div>
+  </div>
+</section>
+
+<div class="diagonal-divider"></div>
+
+<!-- ========== DATA FLOW ========== -->
+<section class="flow-section" id="flow">
+  <div class="section-label reveal">// 02</div>
+  <h2 class="section-title reveal reveal-delay-1">Data Flow Pipeline</h2>
+  <p class="section-desc reveal reveal-delay-2">
+    Radio packets travel from IoT sensors through gateways into ChirpStack's processing engine,
+    emerging as structured, decoded events delivered to your applications.
+  </p>
+
+  <div class="flow-diagram reveal reveal-delay-3">
+    <div class="flow-node">
+      <div class="flow-node-label">Source</div>
+      <div class="flow-node-title">IoT Sensors</div>
+      <div class="flow-node-desc">LoRaWAN Class A/B/C<br>end-devices</div>
+    </div>
+
+    <div class="flow-arrow">
+      <div class="flow-arrow-line">
+        <div class="flow-packet"></div>
+        <span class="flow-arrow-label">Radio / RF</span>
+      </div>
+    </div>
+
+    <div class="flow-node">
+      <div class="flow-node-label">Relay</div>
+      <div class="flow-node-title">Gateways</div>
+      <div class="flow-node-desc">Receive &amp; forward<br>raw LoRa frames</div>
+    </div>
+
+    <div class="flow-arrow">
+      <div class="flow-arrow-line">
+        <div class="flow-packet" style="animation-delay: 0.4s;"></div>
+        <span class="flow-arrow-label">UDP / MQTT</span>
+      </div>
+    </div>
+
+    <div class="flow-node core">
+      <div class="flow-node-label">Core Engine</div>
+      <div class="flow-node-title">ChirpStack</div>
+      <div class="flow-node-desc">Dedup, decrypt, MAC processing,<br>ADR, session management,<br>payload decoding</div>
+    </div>
+
+    <div class="flow-arrow">
+      <div class="flow-arrow-line">
+        <div class="flow-packet" style="animation-delay: 0.8s;"></div>
+        <span class="flow-arrow-label">Events</span>
+      </div>
+    </div>
+
+    <div class="flow-node">
+      <div class="flow-node-label">Destination</div>
+      <div class="flow-node-title">Integrations</div>
+      <div class="flow-node-desc">MQTT, Kafka, HTTP,<br>AWS, Azure, GCP&hellip;</div>
+    </div>
+  </div>
+</section>
+
+<div class="diagonal-divider-reverse"></div>
+
+<!-- ========== CORE COMPONENTS ========== -->
+<section class="components-section" id="components">
+  <div class="section-label reveal">// 03</div>
+  <h2 class="section-title reveal reveal-delay-1">Core Components</h2>
+  <p class="section-desc reveal reveal-delay-2">
+    Inside the network server, specialized subsystems handle every aspect of LoRaWAN
+    communication, from raw radio frames to application-layer data.
+  </p>
+
+  <div class="component-row reveal reveal-delay-3">
+    <div class="component-header">
+      <h3>Uplink Pipeline</h3>
+      <p>Processes incoming radio frames from gateways through deduplication, decryption, and MAC layer handling to produce decoded application events.</p>
+    </div>
+    <div class="component-details">
+      <div class="component-detail-item">
+        <span class="idx">01</span>
+        <div>
+          <h4>Gateway Deduplication</h4>
+          <p>Multiple gateways may receive the same frame. ChirpStack deduplicates across all gateways and selects the best reception for metadata.</p>
+        </div>
+      </div>
+      <div class="component-detail-item">
+        <span class="idx">02</span>
+        <div>
+          <h4>Session Lookup &amp; Decryption</h4>
+          <p>Looks up the device session by DevAddr, validates MIC, decrypts the FRMPayload using the appropriate session keys (NwkSKey / AppSKey).</p>
+        </div>
+      </div>
+      <div class="component-detail-item">
+        <span class="idx">03</span>
+        <div>
+          <h4>MAC Command Processing</h4>
+          <p>24 MAC command handlers process network management commands: ADR, link checks, channel configuration, device status, and relay operations.</p>
+        </div>
+      </div>
+      <div class="component-detail-item">
+        <span class="idx">04</span>
+        <div>
+          <h4>Payload Decoding &amp; Event Dispatch</h4>
+          <p>JavaScript codecs or Cayenne LPP decode raw bytes into structured data. Events are dispatched to all configured integrations.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="component-row reveal">
+    <div class="component-header">
+      <h3>Downlink Pipeline</h3>
+      <p>Manages the transmission of data and commands back to devices, handling class-specific scheduling and gateway selection.</p>
+    </div>
+    <div class="component-details">
+      <div class="component-detail-item">
+        <span class="idx">01</span>
+        <div>
+          <h4>Queue Management</h4>
+          <p>Prioritized downlink queue per device. Application payloads, MAC commands, and multicast frames are queued with expiration tracking.</p>
+        </div>
+      </div>
+      <div class="component-detail-item">
+        <span class="idx">02</span>
+        <div>
+          <h4>Class-Specific Scheduling</h4>
+          <p>Class A: RX1/RX2 receive windows after uplink. Class B: scheduled ping slots. Class C: immediate transmission via continuous receive window.</p>
+        </div>
+      </div>
+      <div class="component-detail-item">
+        <span class="idx">03</span>
+        <div>
+          <h4>Gateway Selection &amp; Transmission</h4>
+          <p>Selects optimal gateway based on signal quality and duty-cycle constraints. Frames are encrypted, serialized, and dispatched to the gateway backend.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="component-row reveal">
+    <div class="component-header">
+      <h3>gRPC API</h3>
+      <p>Ten service definitions with full CRUD operations, streaming events, and management capabilities accessible from 10 programming languages.</p>
+    </div>
+    <div class="component-details">
+      <div class="component-detail-item">
+        <span class="idx">svc</span>
+        <div>
+          <h4>ApplicationService &middot; DeviceService &middot; DeviceProfileService</h4>
+          <p>Manage applications, provision and activate devices, define device behaviors and codec configurations.</p>
+        </div>
+      </div>
+      <div class="component-detail-item">
+        <span class="idx">svc</span>
+        <div>
+          <h4>GatewayService &middot; TenantService &middot; UserService</h4>
+          <p>Register gateways, manage multi-tenant isolation with role-based access, and handle user authentication with OpenID Connect / OAuth2.</p>
+        </div>
+      </div>
+      <div class="component-detail-item">
+        <span class="idx">svc</span>
+        <div>
+          <h4>FuotaService &middot; MulticastService &middot; RelayService</h4>
+          <p>Firmware updates over-the-air, multicast group management for bulk operations, and LoRaWAN relay device configuration.</p>
+        </div>
+      </div>
+      <div class="component-detail-item">
+        <span class="idx">svc</span>
+        <div>
+          <h4>InternalService</h4>
+          <p>Authentication, global search, system settings, API key management, and real-time event streaming via gRPC server streaming.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="diagonal-divider"></div>
+
+<!-- ========== INTEGRATIONS ========== -->
+<section class="integrations-section" id="integrations">
+  <div class="section-label reveal">// 04</div>
+  <h2 class="section-title reveal reveal-delay-1">18+ Integrations</h2>
+  <p class="section-desc reveal reveal-delay-2">
+    Every integration receives the same event types: uplink, join, ack, txack, status, location,
+    log, and custom integration events. Global integrations apply to all applications; per-app
+    integrations are configured individually.
+  </p>
+
+  <div class="integration-legend reveal reveal-delay-3">
+    <div class="legend-item"><span class="chip-dot global"></span> Global Integration</div>
+    <div class="legend-item"><span class="chip-dot per-app"></span> Per-Application</div>
+  </div>
+
+  <div class="integration-grid reveal reveal-delay-3">
+    <div class="integration-chip"><span class="chip-dot global"></span> MQTT</div>
+    <div class="integration-chip"><span class="chip-dot global"></span> PostgreSQL</div>
+    <div class="integration-chip"><span class="chip-dot global"></span> AMQP / RabbitMQ</div>
+    <div class="integration-chip"><span class="chip-dot global"></span> Apache Kafka</div>
+    <div class="integration-chip"><span class="chip-dot global"></span> Redis</div>
+    <div class="integration-chip"><span class="chip-dot per-app"></span> HTTP Webhooks</div>
+    <div class="integration-chip"><span class="chip-dot per-app"></span> AWS SNS</div>
+    <div class="integration-chip"><span class="chip-dot per-app"></span> Azure Service Bus</div>
+    <div class="integration-chip"><span class="chip-dot per-app"></span> GCP Pub/Sub</div>
+    <div class="integration-chip"><span class="chip-dot per-app"></span> InfluxDB v1 &amp; v2</div>
+    <div class="integration-chip"><span class="chip-dot per-app"></span> ThingsBoard</div>
+    <div class="integration-chip"><span class="chip-dot per-app"></span> Blynk</div>
+    <div class="integration-chip"><span class="chip-dot per-app"></span> IFTTT</div>
+    <div class="integration-chip"><span class="chip-dot per-app"></span> myDevices / Cayenne</div>
+    <div class="integration-chip"><span class="chip-dot per-app"></span> Pilot Things</div>
+  </div>
+</section>
+
+<div class="diagonal-divider-reverse"></div>
+
+<!-- ========== SCENARIOS ========== -->
+<section class="scenarios-section" id="scenarios">
+  <div class="section-label reveal">// 05</div>
+  <h2 class="section-title reveal reveal-delay-1">Best-Fit Scenarios</h2>
+  <p class="section-desc reveal reveal-delay-2">
+    ChirpStack adapts to deployments ranging from a single Raspberry Pi in a field
+    to multi-tenant cloud platforms serving thousands of gateways.
+  </p>
+
+  <div class="scenario-grid">
+    <div class="scenario-card reveal">
+      <span class="scenario-number">01</span>
+      <span class="scenario-tag">Municipal</span>
+      <h3>Smart City Infrastructure</h3>
+      <p>Hundreds of sensors across parking, waste, air quality, and lighting networks managed through multi-tenant isolation per department.</p>
+      <div class="scenario-why"><strong>Why it fits:</strong> Multi-tenancy, gateway map visualization, ADR for fleet battery optimization, MQTT/Kafka for existing data platforms. Self-hosted means no per-device cloud fees at scale.</div>
+    </div>
+
+    <div class="scenario-card reveal reveal-delay-1">
+      <span class="scenario-number">02</span>
+      <span class="scenario-tag">Industrial</span>
+      <h3>Industrial IoT &amp; Agriculture</h3>
+      <p>Soil moisture, temperature, vibration, and tank level sensors deployed across large areas with limited connectivity.</p>
+      <div class="scenario-why"><strong>Why it fits:</strong> Class A for battery sensors, Class C for actuators, FUOTA for remote firmware updates, SQLite backend for edge deployment on a single gateway device.</div>
+    </div>
+
+    <div class="scenario-card reveal reveal-delay-2">
+      <span class="scenario-number">03</span>
+      <span class="scenario-tag">Platform</span>
+      <h3>LoRaWAN Platform-as-a-Service</h3>
+      <p>Connectivity providers offering network services to multiple customers with white-labeled portals and per-customer cloud routing.</p>
+      <div class="scenario-why"><strong>Why it fits:</strong> Multi-tenancy with roles, per-app integrations for customer-specific cloud targets, gRPC API in 10 languages for custom portals, OpenID Connect for enterprise SSO.</div>
+    </div>
+
+    <div class="scenario-card reveal reveal-delay-3">
+      <span class="scenario-number">04</span>
+      <span class="scenario-tag">Education</span>
+      <h3>R&amp;D &amp; Prototyping</h3>
+      <p>University labs, research teams, and hobbyists experimenting with LoRaWAN protocols and building proof-of-concept deployments.</p>
+      <div class="scenario-why"><strong>Why it fits:</strong> Free and open-source, Docker Compose for one-command setup, SQLite for zero-dependency prototyping, raw frame inspection for learning the protocol.</div>
+    </div>
+
+    <div class="scenario-card reveal reveal-delay-4">
+      <span class="scenario-number">05</span>
+      <span class="scenario-tag">Custom</span>
+      <h3>Custom IoT Applications</h3>
+      <p>Developers building end-to-end solutions like asset tracking or environmental monitoring who need a network server as infrastructure.</p>
+      <div class="scenario-why"><strong>Why it fits:</strong> gRPC streaming for real-time events, chirpstack-integration crate for custom Rust integrations, lrwn crate as standalone LoRaWAN library, JavaScript codec system.</div>
+    </div>
+
+    <div class="scenario-card reveal reveal-delay-5">
+      <span class="scenario-number">06</span>
+      <span class="scenario-tag">Secure</span>
+      <h3>Air-Gapped &amp; Private Networks</h3>
+      <p>Military, mining, or security-sensitive deployments where data cannot leave the premises. No external dependencies required.</p>
+      <div class="scenario-why"><strong>Why it fits:</strong> Fully self-hosted, SQLite eliminates database server, ARM support for embedded hardware, MIT license with no phone-home. Runs entirely offline.</div>
+    </div>
+
+    <div class="scenario-card reveal reveal-delay-6" style="grid-column: span 2;">
+      <span class="scenario-number">07</span>
+      <span class="scenario-tag">Federation</span>
+      <h3>LoRaWAN Roaming &amp; Network Federation</h3>
+      <p>Multiple network operators enabling devices to seamlessly roam between networks via the LoRaWAN Backend Interfaces specification.
+        ChirpStack handles passive roaming protocol negotiation, uplink forwarding, and downlink coordination between home and visited networks automatically.</p>
+      <div class="scenario-why"><strong>Why it fits:</strong> LoRaWAN Backend Interfaces implementation, passive roaming (PRStartReq, PRStopReq, XmitDataReq), Join Server integration, NetID-based routing.</div>
+    </div>
+  </div>
+</section>
+
+<div class="diagonal-divider"></div>
+
+<!-- ========== DEPLOYMENT ========== -->
+<section class="deploy-section" id="deploy">
+  <div class="section-label reveal">// 06</div>
+  <h2 class="section-title reveal reveal-delay-1">Deployment Options</h2>
+  <p class="section-desc reveal reveal-delay-2">
+    From containerized cloud deployments to bare-metal edge installations,
+    ChirpStack adapts to your infrastructure.
+  </p>
+
+  <div class="deploy-grid reveal reveal-delay-3">
+    <div class="deploy-card">
+      <span class="deploy-icon">&boxbox;</span>
+      <h3>Docker Compose</h3>
+      <p>One-command development and small production setups with all dependencies containerized.</p>
+      <div class="deploy-db">PostgreSQL</div>
+    </div>
+    <div class="deploy-card">
+      <span class="deploy-icon">&Copf;</span>
+      <h3>Kubernetes</h3>
+      <p>Horizontally scalable production deployments with orchestrated service management.</p>
+      <div class="deploy-db">PostgreSQL</div>
+    </div>
+    <div class="deploy-card">
+      <span class="deploy-icon">&LeftAngleBracket;/&RightAngleBracket;</span>
+      <h3>Bare Metal / VM</h3>
+      <p>Traditional server installations via .deb or .rpm packages with systemd units.</p>
+      <div class="deploy-db">PostgreSQL or SQLite</div>
+    </div>
+    <div class="deploy-card">
+      <span class="deploy-icon">&lozf;</span>
+      <h3>Edge / Embedded</h3>
+      <p>Single-gateway offline deployments on Raspberry Pi or industrial PCs.</p>
+      <div class="deploy-db">SQLite</div>
+    </div>
+  </div>
+
+  <div class="deploy-platforms reveal reveal-delay-4">
+    <span class="deploy-platforms-label">Supported Platforms</span>
+    <div class="platform-tags">
+      <span class="platform-tag">linux/amd64</span>
+      <span class="platform-tag">linux/arm64</span>
+      <span class="platform-tag">linux/arm/v7</span>
+      <span class="platform-tag">.deb (Debian/Ubuntu)</span>
+      <span class="platform-tag">.rpm (RHEL/CentOS)</span>
+      <span class="platform-tag">.tar.gz (Generic)</span>
+      <span class="platform-tag">Docker Hub</span>
+    </div>
+  </div>
+</section>
+
+<!-- ========== API LANGUAGES ========== -->
+<section class="api-section">
+  <div class="section-label reveal">// 07</div>
+  <h2 class="section-title reveal reveal-delay-1">API in 10 Languages</h2>
+  <p class="section-desc reveal reveal-delay-2">
+    Generated from Protocol Buffer definitions, ChirpStack's gRPC API provides
+    type-safe client libraries for building custom applications and integrations.
+  </p>
+
+  <div class="lang-grid reveal reveal-delay-3">
+    <span class="lang-tag">Rust</span>
+    <span class="lang-tag">Go</span>
+    <span class="lang-tag">Python</span>
+    <span class="lang-tag">JavaScript</span>
+    <span class="lang-tag">TypeScript</span>
+    <span class="lang-tag">Java</span>
+    <span class="lang-tag">Kotlin</span>
+    <span class="lang-tag">C#</span>
+    <span class="lang-tag">PHP</span>
+    <span class="lang-tag">C</span>
+  </div>
+</section>
+
+<!-- ========== FOOTER ========== -->
+<footer>
+  <div class="footer-left">
+    ChirpStack is open-source under the MIT License &middot;
+    <a href="https://github.com/chirpstack/chirpstack" target="_blank" rel="noopener">github.com/chirpstack/chirpstack</a>
+  </div>
+  <div class="footer-right">
+    v4.16.1 &middot; Informational Reference
+  </div>
+</footer>
+
+<script>
+// ========== SCROLL REVEAL ==========
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+// ========== COUNTER ANIMATION ==========
+let countersAnimated = false;
+const counterObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting && !countersAnimated) {
+      countersAnimated = true;
+      document.querySelectorAll('[data-count]').forEach(el => {
+        const target = parseInt(el.dataset.count);
+        const duration = 1600;
+        const startTime = performance.now();
+
+        function updateCounter(currentTime) {
+          const elapsed = currentTime - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          // Ease out cubic
+          const eased = 1 - Math.pow(1 - progress, 3);
+          const current = Math.round(eased * target);
+
+          // Add + suffix for specific counts
+          if (target === 18) {
+            el.textContent = current + '+';
+          } else {
+            el.textContent = current;
+          }
+
+          if (progress < 1) {
+            requestAnimationFrame(updateCounter);
+          }
+        }
+
+        requestAnimationFrame(updateCounter);
+      });
+    }
+  });
+}, { threshold: 0.5 });
+
+const statsBar = document.querySelector('.stats-bar');
+if (statsBar) counterObserver.observe(statsBar);
+
+// ========== SMOOTH NAV SCROLL ==========
+document.querySelectorAll('.nav-links a').forEach(link => {
+  link.addEventListener('click', (e) => {
+    e.preventDefault();
+    const targetId = link.getAttribute('href');
+    const target = document.querySelector(targetId);
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+});
+
+// ========== NAV BACKGROUND TRANSITION ==========
+const nav = document.querySelector('nav');
+let lastScroll = 0;
+
+window.addEventListener('scroll', () => {
+  const scrollY = window.scrollY;
+  if (scrollY > 100) {
+    nav.style.borderBottomColor = 'var(--border-light)';
+  } else {
+    nav.style.borderBottomColor = 'var(--border)';
+  }
+  lastScroll = scrollY;
+}, { passive: true });
+</script>
+
+</body>
+</html>
